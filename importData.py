@@ -6,16 +6,38 @@ networks = [TUNGraph.New() for x in egos]
 overallNet = TUNGraph.New()
 overallNet = LoadEdgeList(PUNGraph, "facebook/total.edges", 0 ,1)
 for i in range(len(egos)):
-	filename = "facebook/" + str(egos[i])+ ".edges"
-	graph = networks[i]
-	graph = LoadEdgeList(PUNGraph, filename, 0, 1)
-	if not overallNet.IsNode(egos[i]):
-		overallNet.AddNode(egos[i])
-	for node in graph.Nodes():
-		overallNet.AddEdge(egos[i], node.GetId())
-	print str(graph.GetNodes()) + " " + str(graph.GetEdges())
+  filename = "facebook/" + str(egos[i])+ ".edges"
+  networks[i] = LoadEdgeList(PUNGraph, filename, 0, 1)
+  if not overallNet.IsNode(egos[i]):
+    overallNet.AddNode(egos[i])
+  for node in networks[i].Nodes():
+    overallNet.AddEdge(egos[i], node.GetId())
+  #print str(networks[i].GetNodes()) + " " + str(networks[i].GetEdges())
+networks.append(overallNet)
+#print overallNet.GetNodes()
 
-print overallNet.GetNodes()
+print "clustering coefficient"
+clusteringCo = []
+for i in networks:
+  clusteringCo.append(GetClustCf(i, -1))
+print clusteringCo
+
+print "mean degree"
+meanDeg = []
+for i in networks:
+  meanDeg.append(i.GetEdges()/float(i.GetNodes()))
+print meanDeg
+
+print "degree Distribution"
+degDistributions = []
+for i in networks:
+  degDist = TIntPrV()
+  GetDegCnt(i, degDist)
+  tempDict = dict()
+  for item in degDist:
+    tempDict[item.GetVal1()] = item.GetVal2()
+  degDistributions.append(tempDict)
+  print tempDict
 
 
 
