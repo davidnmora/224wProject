@@ -1,6 +1,6 @@
-#FILE DESCRIPTION: Loads and performs summary 
-#statistics on each ego nodes circles, creating 
-#nested dicts accessible by constants.
+#FILE DESCRIPTION: Loads each ego nodes circles, creating 
+#nested dicts accessible by constants holding basic
+#properties of the circles.
 
 from snap import *
 import numpy as np
