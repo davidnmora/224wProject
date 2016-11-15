@@ -1,7 +1,10 @@
 #FILE DESCRIPTION: Loads and performs summary 
-#statistics on each ego nodes circles.
+#statistics on each ego nodes circles, creating 
+#nested dicts accessible by constants.
 
 from snap import *
+import numpy as np
+import matplotlib.pyplot as plt
 
 #DATA STRUCTURES_________________________
 # circlesByEgoId structured as 
@@ -19,6 +22,8 @@ egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 
 
 #CONSTANTS: KEYS FOR DICTS
+EGO_ID = "EGO_ID"
+#circlesByEgoId:
 	#circleProps
 CIRCLE_ID = "CIRCLE_ID"
 NODES_VECTOR = "NODES_VECTOR"
@@ -26,11 +31,11 @@ NODES_SET = "NODES_SET"
 AVG_DEG = "AVG_DEG"
 AVG_CC = "AVG_CC"
 DIAM = "DIAM"
+#circlesByEgoId:
 	#circleProps:
-		#circleOverlap
+		#circleComparison
 CIRCLE_COMPARISON = "CIRCLE_COMPARISON"
 IS_SUBSET_OF = "IS_SUBSET_OF"
-
 
 
 #FUNCTIONS________________________________
@@ -78,7 +83,7 @@ def loadEachEgosCircles():
 			circleProps[AVG_DEG] = avgDeg/float(nCount)
 			circleProps[AVG_CC] = GetClustCf(circleGraph)
 			circleProps[DIAM] = GetBfsFullDiam(circleGraph, nCount)
-			print "avg deg,cc,diam : %d, %d, %d" % (circleProps[AVG_DEG], 100*circleProps[AVG_CC], circleProps[DIAM])
+			# print "avg deg,cc,diam : %d, %d, %d" % (circleProps[AVG_DEG], 100*circleProps[AVG_CC], circleProps[DIAM])
 
 			#final step: store properties of circle in larger structure
 			circlesFromAnEgo[circleId] = circleProps
@@ -102,12 +107,56 @@ def loadEachEgosCircles():
 			circlesFromAnEgo[circleProps[CIRCLE_ID]] = circleProps
 
 		circlesByEgoId[ego] = circlesFromAnEgo
-
+def getDataAt(ego = None, circle = None, circleProp = None, circleCompProp = None):
+	result = circlesByEgoId
+	if ego in result:
+		result = circlesByEgoId[ego]
+		if circle in result:
+			result = circlesByEgoId[ego][circle]
+			if circleProp in result:
+				result =  circlesByEgoId[ego][circle][circleProp]
+				if circleCompProp:
+					result =  circlesByEgoId[ego][circle][circleProp][circleCompProp]
+	return result
+def getListOfAll(data):
+	result = list()
+	for egoId in egos:
+		if data == EGO_ID:
+			result.append(egoId)
+		else:
+			for circleId in circlesByEgoId[egoId]:
+				if data == CIRCLE_ID:
+					result.append(circleId)
+				else:
+					circleProps = circlesByEgoId[egoId][circleId]
+					if data == NODES_VECTOR:
+						result.append(circleProps[NODES_VECTOR])
+					elif data == NODES_SET:
+						result.append(circleProps[NODES_SET])
+					elif data == AVG_DEG:
+						result.append(circleProps[AVG_DEG])
+					elif data == AVG_CC:
+						result.append(circleProps[AVG_CC])
+					elif data == DIAM:
+						result.append(circleProps[DIAM])
+					elif data == CIRCLE_COMPARISON:
+						result.append(circleProps)
+					else:
+						if data == IS_SUBSET_OF:
+							result.append(circleProps[CIRCLE_COMPARISON][IS_SUBSET_OF])
+						#add more cirlceComparison props as they're created
+	return result
 
 
 loadEachEgosCircles() 
-# print circlesByEgoId[0]
+#DEMO OF DATA QUERYING FUNCTIONS:
+#A. retrieve data within the data tree
+#ie ego 0, circle 4, avg custering coefficient
+print getDataAt(0, 4, AVG_CC)
+#B. aggregates a list of all of one type of data for the entire graph
+#ie all egoIds, all avgDeg, a list of all the nodeId vectors
+myData = getListOfAll(AVG_DEG)
 
+plt.hist(myData)
+plt.show()
 
-
-#CODE STORAGE BIN
