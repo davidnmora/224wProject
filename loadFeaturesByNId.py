@@ -1,22 +1,21 @@
-#FILE DESCRIPTION: Load features
+#FILE DESCRIPTION: Load features, storing in dicts both by
+#node Id and by feature Id.
+#Because features are represented by integer ids, this file
+#creates a dict key to convert between integers and string
+#human-readable descriptions ie 77 -> 'education;year;id'
 
-#plan
-# goal: have a dict with key = featureName :  val = set of ids 
-# also have a dict with key=nId : val = set of featureNames
-# STEPS TO COMPLETE:
-# 2. already arranged by nId, to dict, adding index to array when
-# ever a 1 is encountered (after deleting first instance)
-# 3. create a dictionary of int featurenames keyed to human-readable
-# anonymized features
+#Details: Because features are given local listings (ids) but have
+#(more useful) global ids accross circle, they are converted
+
 
 from snap import *
 import numpy as np
 import matplotlib.pyplot as plt
 
-
-
-featuresByNId = dict()
-#list of all ego node ids
+#GLOBAL DATA STRUCTURES
+featByNId = dict()
+nIdsByFeatId = dict()
+globIdToDescriptionKey = dict()
 egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 
 
@@ -27,32 +26,70 @@ def loadAnEgoFeat(ego):
 		feat = document.readlines()
 	return feat
 
-def parseANodesFeat(featStr):
-	global featuresByNId
-	featList = featStr.split(' ') 
+def parseANodesFeat(nodeFeatStr, locToGlobFeatKey):
+	global featByNId
+	global nIdsByFeatId
+	global globIdToDescriptionKey
+	featList = nodeFeatStr.split(' ') 
 	featList[len(featList)-1] = featList[len(featList)-1].rstrip('\n')
 	nId = int(featList[0])
 	del featList[0]
 	featSet = set()
 	for featIndex in range(len(featList)):		
 		if featList[featIndex] == '1':
-			featSet.add(featIndex)
-	featuresByNId[nId] = featSet
+			featId = locToGlobFeatKey[featIndex]
+			featSet.add(featId)
+			if featId in nIdsByFeatId:
+				nIdsByFeatId[featId].add(nId)
+			else:
+				nIdSet = set()
+				nIdsByFeatId[featId] = nIdSet
+	featByNId[nId] = featSet
 
-def loadGlobalFeatKey(ego):
+def loadlocToGlobFeatKey(ego):
+	locToGlobFeatKey = dict()
 	filename = "fb_data/facebook/"+ str(ego) + ".featnames"
 	with open(filename, "r") as document:
 		featNames = document.readlines()
-	return featNames
+	for feat in featNames:
+		feat = feat.split(' ')
+		locId = int(feat[0])
+		globId = int(feat[len(feat)-1].rstrip('\n'))
+		locToGlobFeatKey[locId] = globId
+		#get feature description string
+		featDescript = feat[1][0 : feat[1].rfind(';')]#.split(';')
+		globIdToDescriptionKey[globId] = featDescript
+	return locToGlobFeatKey
 
 def loadAllFeat():
 	for ego in egos: 
-		globalFeatKey = loadGlobalFeatKey(ego)
+		locToGlobFeatKey = loadlocToGlobFeatKey(ego)
 		featByNode = loadAnEgoFeat(ego)
-		for featStr in featByNode:
-			parseANodesFeat(featStr)
+		for nodeFeatStr in featByNode:
+			parseANodesFeat(nodeFeatStr, locToGlobFeatKey)
+
+def getNodeFeatDescripts(nId):
+	nodeFeats = set()
+	for featId in featByNId[nId]:
+		# print featId
+		nodeFeats.add(globIdToDescriptionKey[featId])
+		# for featStr in globIdToDescriptionKey[featId]:
+		# 	nodeFeats.add(featStr)
+	return nodeFeats
+
+def nodeHasFeat(nId, featId):
+	
+	return featId in featByNId[nId]
 
 
-#RUN PROGRAM 
 loadAllFeat()
-		
+
+#DEMO:
+featId = 144
+nId = 122
+print getNodeFeatDescripts(nId)
+print "Feature Ids belonging to node nId: "
+print featByNId[nId]
+print "Node Ids who have feature featId: "
+print nIdsByFeatId[featId]
+print "nId has featId (boolean 0 or 1): %d" % nodeHasFeat(nId, featId)
