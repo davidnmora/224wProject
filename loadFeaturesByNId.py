@@ -4,9 +4,19 @@
 #creates a dict key to convert between integers and string
 #human-readable descriptions ie 77 -> 'education;year;id'
 
-#Details: Because features are given local listings (ids) but have
-#(more useful) global ids accross circle, they are converted
+#TO DO:
+#1. figure out how to use it as a module/call it from other files
+#2. robust way to filter nodes by feature categories
+	# get nodes who...
+	# a. share a featureId (DONE)
+	# b. share a featureDescript (TODO: build descr->id dict)
+	# c. share a root category (ie education, work) (TODO: use b., then filter using split)
 
+
+#RACHEL'S GOAL: look at properties of a networks/cirlces of people
+#who all share certain attributes
+#what we'll need to do that: 
+# load a query for all nodes sharing a certain category of feat 
 
 from snap import *
 import numpy as np
