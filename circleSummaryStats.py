@@ -31,6 +31,7 @@ NODES_SET = "NODES_SET"
 AVG_DEG = "AVG_DEG"
 AVG_CC = "AVG_CC"
 DIAM = "DIAM"
+SUB_GRAPH = "SUB_GRAPH"
 #circlesByEgoId:
 	#circleProps:
 		#circleComparison
@@ -56,6 +57,7 @@ def loadEachEgosCircles():
 			#GET AVERAGE DEGREE:
 			avgDeg = 0
 			circleGraph = ConvertSubGraph(PUNGraph, egoGraph, NIdV)
+                        circleProps[SUB_GRAPH] = circleGraph
 			nCount = circleGraph.GetNodes()
 			for node in circleGraph.Nodes():
 				avgDeg += node.GetDeg()
@@ -202,27 +204,27 @@ def loadEgoGraph(ego):
 
 
 
-loadEachEgosCircles() 
+#loadEachEgosCircles() 
 
 #DEMO OF DATA QUERYING FUNCTIONS:
 
 #A. retrieve data within the data tree, stored as items in a list
 #ie ego 0, circle 4, avg custering coefficient
-print getDataAt(0,3)
-print getDataAt(0, 3, CIRCLE_COMPARISON, IS_SUBSET_OF)
-print " "
+#print getDataAt(0,3)
+#print getDataAt(0, 3, CIRCLE_COMPARISON, IS_SUBSET_OF)
+#print " "
 
 #B. aggregates a list of all of one type of data for the entire graph
 #ie all egoIds, all avgDeg, a list of all the nodeId vectors
-myData = getListOfAll(AVG_DEG)
-print myData
-print " "
-# plt.hist(myData)
-# plt.show()
+#myData = getListOfAll(AVG_DEG)
+#print myData
+#print " "
+#plt.hist(myData)
+#plt.show()
 
 #C. areggates a set/TINtV of all node Ids within a specified region of the graph
 # ie passing in egoId, circleId returns all nodes in that circle in that ego
 # NOTE: if no parameters are passed, returns all nodes in graph
-print getNIdsSetAt(107, 2)
-print len(getNIdsSetAt(107, 2))
-print getNIdsTIntVAt(107, 2).Len()
+#print getNIdsSetAt(107, 2)
+#print len(getNIdsSetAt(107, 2))
+#print getNIdsTIntVAt(107, 2).Len()
