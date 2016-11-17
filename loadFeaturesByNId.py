@@ -6,40 +6,88 @@
 
 #TO DO:
 #1. figure out how to use it as a module/call it from other files
-#2. robust way to filter nodes by feature categories
-	# get nodes who...
-	# a. share a featureId (DONE)
-	# b. share a featureDescript (TODO: build descr->id dict)
-	# c. share a root category (ie education, work) (TODO: use b., then filter using split)
-
 
 #RACHEL'S GOAL: look at properties of a networks/cirlces of people
 #who all share certain attributes
 #what we'll need to do that: 
-# load a query for all nodes sharing a certain category of feat 
+# find most populous features
 
 from snap import *
-import numpy as np
-import matplotlib.pyplot as plt
 
 #GLOBAL DATA STRUCTURES
 featByNId = dict()
 nIdsByFeatId = dict()
-globIdToDescriptionKey = dict()
+nIdsByFeatDescript = dict()
+globIdToDescriptKey = dict()
 egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 
 
-#FUNCTIONS________________________________
+#FUNCTIONS_______________________________________________
+
+#INITIALIZATION:
+#Must be called first. Populates all data structures.
+def loadAllFeat():
+	for ego in egos: 
+		locToGlobFeatKey = loadlocToGlobFeatKey(ego)
+		featByNode = loadAnEgoFeat(ego)
+		for nodeFeatStr in featByNode:
+			parseANodesFeat(nodeFeatStr, locToGlobFeatKey)
+		loadNIdsByFeatDescript()
+
+#BUILT FOR RACHEL W/ <3 *****************
+# These functions get a set() of all node Ids which...
+# a. ...share an specified featureId
+def nIdsWithFeatId(featId, optSetOfNIds=set()):
+	#if optSetOfNIds specified, filter it
+	if optSetOfNIds:
+		result = set()
+		for nId in optSetOfNIds:
+			if nId in nIdsByFeatId[featId]:
+				result.add(nId)
+	else:
+		result = nIdsByFeatId[featId]
+	return result
+# b. ...share a specified featureDescript, either exactly ("education"->"education") or in part ("education" -> education;type")
+def nIdsWithFeatDescript(featDescript, optSetOfNIds=set()):
+	result = set()
+	#search all description keys of dict, if return the ones containing AT LEAST the input string
+	for featDescriptKey in nIdsByFeatDescript:
+		#check if featDescript matches the featDescript key, in whole or in part
+		if featDescript in featDescriptKey:
+			#if there's a specififed set, only add things in the specified set
+			if optSetOfNIds:
+				intersection = optSetOfNIds.intersection(nIdsByFeatDescript[featDescriptKey])
+				result.union(intersection) 
+
+			#add set of all nodes who have that featDescript
+			else:
+				result = result.union(nIdsByFeatDescript[featDescriptKey])
+	return result
+
+#"PUBLIC" CLIENT-SIDE FUNCTIONS***********
+#returns a boolean based on whether a node has a given feature (IS THIS USEFUL?)
+def nodeHasFeat(nId, featId):
+	
+	return featId in featByNId[nId]
+#returns a set() of all featIds of a given nId
+def featIdsOfNId(nId):
+	return featByNId[nId]
+
+
+
+
+#"PRIVATE" HELPER FUNCTIONS***************
 def loadAnEgoFeat(ego):
 	filename = "fb_data/facebook/"+ str(ego) + ".feat"
 	with open(filename, "r") as document:
 		feat = document.readlines()
 	return feat
-
 def parseANodesFeat(nodeFeatStr, locToGlobFeatKey):
 	global featByNId
 	global nIdsByFeatId
-	global globIdToDescriptionKey
+	global nIdsByFeatDescript
+	global globIdToDescriptKey
+	
 	featList = nodeFeatStr.split(' ') 
 	featList[len(featList)-1] = featList[len(featList)-1].rstrip('\n')
 	nId = int(featList[0])
@@ -55,7 +103,6 @@ def parseANodesFeat(nodeFeatStr, locToGlobFeatKey):
 				nIdSet = set()
 				nIdsByFeatId[featId] = nIdSet
 	featByNId[nId] = featSet
-
 def loadlocToGlobFeatKey(ego):
 	locToGlobFeatKey = dict()
 	filename = "fb_data/facebook/"+ str(ego) + ".featnames"
@@ -67,39 +114,27 @@ def loadlocToGlobFeatKey(ego):
 		globId = int(feat[len(feat)-1].rstrip('\n'))
 		locToGlobFeatKey[locId] = globId
 		#get feature description string
-		featDescript = feat[1][0 : feat[1].rfind(';')]#.split(';')
-		globIdToDescriptionKey[globId] = featDescript
+		featDescript = feat[1][0 : feat[1].rfind(';')]
+		globIdToDescriptKey[globId] = featDescript
 	return locToGlobFeatKey
-
-def loadAllFeat():
-	for ego in egos: 
-		locToGlobFeatKey = loadlocToGlobFeatKey(ego)
-		featByNode = loadAnEgoFeat(ego)
-		for nodeFeatStr in featByNode:
-			parseANodesFeat(nodeFeatStr, locToGlobFeatKey)
-
-def getNodeFeatDescripts(nId):
-	nodeFeats = set()
-	for featId in featByNId[nId]:
-		# print featId
-		nodeFeats.add(globIdToDescriptionKey[featId])
-		# for featStr in globIdToDescriptionKey[featId]:
-		# 	nodeFeats.add(featStr)
-	return nodeFeats
-
-def nodeHasFeat(nId, featId):
-	
-	return featId in featByNId[nId]
+#creates a dict of key: feat description string, val: nIds with that feature
+def loadNIdsByFeatDescript():
+	global nIdsByFeatDescript
+	for featId in nIdsByFeatId:
+		nIdsByFeatDescript[globIdToDescriptKey[featId]] = nIdsByFeatId[featId]
 
 
+#PROGRAM_________________________________________________
 loadAllFeat()
 
 #DEMO:
 featId = 144
 nId = 122
-print getNodeFeatDescripts(nId)
-print "Feature Ids belonging to node nId: "
-print featByNId[nId]
-print "Node Ids who have feature featId: "
-print nIdsByFeatId[featId]
+print "Set of features belonging to a given nId: "
+print featIdsOfNId(nId)
+print "Set of Node Ids who have a given featId: "
+mySet = set([1, 2, 163, 100, 3586, 3718])
+print nIdsWithFeatId(52)
 print "nId has featId (boolean 0 or 1): %d" % nodeHasFeat(nId, featId)
+print nIdsWithFeatDescript("work")
+print nIdsWithFeatDescript("work", mySet)

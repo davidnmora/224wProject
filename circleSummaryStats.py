@@ -26,7 +26,7 @@ EGO_ID = "EGO_ID"
 #circlesByEgoId:
 	#circleProps
 CIRCLE_ID = "CIRCLE_ID"
-NODES_VECTOR = "NODES_VECTOR"
+NODES_VECTOR = "NODES_VECTOR" #TIntV
 NODES_SET = "NODES_SET"
 AVG_DEG = "AVG_DEG"
 AVG_CC = "AVG_CC"
@@ -34,36 +34,15 @@ DIAM = "DIAM"
 #circlesByEgoId:
 	#circleProps:
 		#circleComparison
-CIRCLE_COMPARISON = "CIRCLE_COMPARISON"
-IS_SUBSET_OF = "IS_SUBSET_OF"
+CIRCLE_COMPARISON = "CIRCLE_COMPARISON" #currently, just the key to get IS_SUBSET_OF (eventually, will house more entries)
+IS_SUBSET_OF = "IS_SUBSET_OF" #set containing all local circle Ids of which given circle is a subset
 
 
 #FUNCTIONS________________________________
-def loadCircles(ego):
-	#load circles from file
-	filename = "fb_data/facebook/"+ str(ego) + ".circles"
-	with open(filename, "r") as document:
-		circles = document.readlines()
-	return circles
-def loadACirclesIds(circle, circles):
-	circleNIds = circles[circle].split('\t') 
-	circleNIds[len(circleNIds)-1] = circleNIds[len(circleNIds)-1].rstrip('\n')
-	circleId = circleNIds[0]
-	circleId = int(circleId[len(circleId)-1])
-	del circleNIds[0]
-	NIdV = TIntV()
-	NIdSet = set()
-	for strId in circleNIds:
-		NIdV.Add(int(strId))
-		NIdSet.add(int(strId))
-	return (circleId, NIdV, NIdSet)
-def loadEgoGraph(ego):
-	filename = "fb_data/facebook/" + str(ego) + ".edges"
-	egoGraph = LoadEdgeList(PNEANet, filename, 0, 1) #loaded WRONG graph type so ConvertSubGraph() works :P
-	print "G: Nodes %d, Edges %d" % (egoGraph.GetNodes(), egoGraph.GetEdges())
-	return egoGraph
-
+#PUBLIC FUNCTIONS
+#to initialize
 def loadEachEgosCircles():
+	print "LOADING ENTIRE NETWORK..."
 	for ego in egos: 
 		egoGraph = loadEgoGraph(ego)
 		circlesFromAnEgo = dict() 
@@ -91,12 +70,13 @@ def loadEachEgosCircles():
 		for circleId in circlesFromAnEgo:
 			circleProps = circlesFromAnEgo[circleId]
 			circleComparison = dict()
-			isSubsetOf = dict()
+			isSubsetOf = set()
 			for compCircleId in circlesFromAnEgo:
 				#CHECK AGAINST EACH OTHER CIRCLE
 				compCircleProps = circlesFromAnEgo[compCircleId]
 				#is it a subset of another circle?
-				isSubsetOf[compCircleId] = circleProps[NODES_SET].issubset(compCircleProps[NODES_SET])
+				if circleProps[NODES_SET].issubset(compCircleProps[NODES_SET]):
+					isSubsetOf.add(compCircleId)
 				#TO DO: what's the intersection? percentage intersection?
 			circleComparison[IS_SUBSET_OF] = isSubsetOf
 			#TO DO: CHECK AGAINST ENTIRE EGO NETWORK
@@ -107,6 +87,9 @@ def loadEachEgosCircles():
 			circlesFromAnEgo[circleProps[CIRCLE_ID]] = circleProps
 
 		circlesByEgoId[ego] = circlesFromAnEgo
+	print "...LOAD COMPLETE"
+	print " "
+#for aggregating data
 def getDataAt(ego = None, circle = None, circleProp = None, circleCompProp = None):
 	result = circlesByEgoId
 	if ego in result:
@@ -146,17 +129,100 @@ def getListOfAll(data):
 							result.append(circleProps[CIRCLE_COMPARISON][IS_SUBSET_OF])
 						#add more cirlceComparison props as they're created
 	return result
+#for aggregating nIds
+def getNIdsSetAt(ego = None, circle = None):
+	result = set()
+	if ego in circlesByEgoId:
+		#if circle specified
+		if circle in circlesByEgoId[ego]:
+			#get the nIds from just that circle
+			result = circlesByEgoId[ego][circle][NODES_SET]
+			return result
+		else:
+			#get nIds from every circle
+			for circle in circlesByEgoId[ego]:
+				result = result.union(circlesByEgoId[ego][circle][NODES_SET])
+			return result
+	
+	#if no parameters are specified, return set of all nodes
+	else:
+		for ego in circlesByEgoId:
+			for circle in circlesByEgoId[ego]:
+				result = result.union(circlesByEgoId[ego][circle][NODES_SET])
+		return result
+def getNIdsTIntVAt(ego = None, circle = None):
+	result = TIntV()
+	if ego in circlesByEgoId:
+		#if circle specified
+		if circle in circlesByEgoId[ego]:
+			#get the nIds from just that circle
+			result = circlesByEgoId[ego][circle][NODES_VECTOR]
+			return result
+		else:
+			#get nIds from every circle
+			for circle in circlesByEgoId[ego]:
+				result.Union(circlesByEgoId[ego][circle][NODES_VECTOR])
+			return result
+	
+	#if no parameters are specified, return set of all nodes
+	else:
+		for ego in circlesByEgoId:
+			for circle in circlesByEgoId[ego]:
+				result.Union(circlesByEgoId[ego][circle][NODES_VECTOR])
+		return result		
+
+
+#PRIVATE HELPER FUNCTIONS
+def loadCircles(ego):
+	#load circles from file
+	filename = "fb_data/facebook/"+ str(ego) + ".circles"
+	with open(filename, "r") as document:
+		circles = document.readlines()
+	return circles
+def loadACirclesIds(circle, circles):
+	circleNIds = circles[circle].split('\t') 
+	circleNIds[len(circleNIds)-1] = circleNIds[len(circleNIds)-1].rstrip('\n')
+	circleId = circleNIds[0]
+	circleId = int(circleId[len(circleId)-1])
+	del circleNIds[0]
+	NIdV = TIntV()
+	NIdSet = set()
+	for strId in circleNIds:
+		NIdV.Add(int(strId))
+		NIdSet.add(int(strId))
+	return (circleId, NIdV, NIdSet)
+def loadEgoGraph(ego):
+	filename = "fb_data/facebook/" + str(ego) + ".edges"
+	egoGraph = LoadEdgeList(PNEANet, filename, 0, 1) #loaded WRONG graph type so ConvertSubGraph() works :P
+	# print "G: Nodes %d, Edges %d" % (egoGraph.GetNodes(), egoGraph.GetEdges())
+	return egoGraph
+
+
+
+
 
 
 loadEachEgosCircles() 
+
 #DEMO OF DATA QUERYING FUNCTIONS:
-#A. retrieve data within the data tree
+
+#A. retrieve data within the data tree, stored as items in a list
 #ie ego 0, circle 4, avg custering coefficient
-print getDataAt(0, 4, AVG_CC)
+print getDataAt(0,3)
+print getDataAt(0, 3, CIRCLE_COMPARISON, IS_SUBSET_OF)
+print " "
+
 #B. aggregates a list of all of one type of data for the entire graph
 #ie all egoIds, all avgDeg, a list of all the nodeId vectors
 myData = getListOfAll(AVG_DEG)
-
+print myData
+print " "
 plt.hist(myData)
 plt.show()
 
+#C. areggates a set/TINtV of all node Ids within a specified region of the graph
+# ie passing in egoId, circleId returns all nodes in that circle in that ego
+# NOTE: if no parameters are passed, returns all nodes in graph
+print getNIdsSetAt(107, 2)
+print len(getNIdsSetAt(107, 2))
+print getNIdsTIntVAt(107, 2).Len()
