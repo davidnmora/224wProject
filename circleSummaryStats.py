@@ -217,8 +217,8 @@ print " "
 myData = getListOfAll(AVG_DEG)
 print myData
 print " "
-plt.hist(myData)
-plt.show()
+# plt.hist(myData)
+# plt.show()
 
 #C. areggates a set/TINtV of all node Ids within a specified region of the graph
 # ie passing in egoId, circleId returns all nodes in that circle in that ego

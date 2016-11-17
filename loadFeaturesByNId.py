@@ -32,7 +32,7 @@ def loadAllFeat():
 		featByNode = loadAnEgoFeat(ego)
 		for nodeFeatStr in featByNode:
 			parseANodesFeat(nodeFeatStr, locToGlobFeatKey)
-		loadNIdsByFeatDescript()
+	loadNIdsByFeatDescript()
 
 #BUILT FOR RACHEL W/ <3 *****************
 # These functions get a set() of all node Ids which...
@@ -53,15 +53,20 @@ def nIdsWithFeatDescript(featDescript, optSetOfNIds=set()):
 	#search all description keys of dict, if return the ones containing AT LEAST the input string
 	for featDescriptKey in nIdsByFeatDescript:
 		#check if featDescript matches the featDescript key, in whole or in part
+		
 		if featDescript in featDescriptKey:
 			#if there's a specififed set, only add things in the specified set
 			if optSetOfNIds:
 				intersection = optSetOfNIds.intersection(nIdsByFeatDescript[featDescriptKey])
-				result.union(intersection) 
+				result = result.union(intersection) 
 
 			#add set of all nodes who have that featDescript
 			else:
+			
+			
 				result = result.union(nIdsByFeatDescript[featDescriptKey])
+
+
 	return result
 
 #"PUBLIC" CLIENT-SIDE FUNCTIONS***********
@@ -120,21 +125,47 @@ def loadlocToGlobFeatKey(ego):
 #creates a dict of key: feat description string, val: nIds with that feature
 def loadNIdsByFeatDescript():
 	global nIdsByFeatDescript
+	loaded = False
+	#loop through every featId, [nId, nId...] pair, recalling that multiple featId will match
 	for featId in nIdsByFeatId:
-		nIdsByFeatDescript[globIdToDescriptKey[featId]] = nIdsByFeatId[featId]
+		
+		#descript = "education;year;id"
+		descript = globIdToDescriptKey[featId] 
+		#if we've already stored a list with some nodes...
+		if descript in nIdsByFeatDescript:
+			#add in the new nodes stored at this featId
+			nIdsByFeatDescript[descript].union(nIdsByFeatId[featId])
+		else:
+			#... create a new key for this descript, store nId list there
+			nIdsByFeatDescript[descript] = nIdsByFeatId[featId]
+
+
+
+
 
 
 #PROGRAM_________________________________________________
 loadAllFeat()
 
+
 #DEMO:
-featId = 144
-nId = 122
-print "Set of features belonging to a given nId: "
-print featIdsOfNId(nId)
-print "Set of Node Ids who have a given featId: "
+# featId = 144
+# nId = 122
+# print featIdsOfNId(nId)
+# print "Set of Node Ids who have a given featId: "
+# print "nId has featId (boolean 0 or 1): %d" % nodeHasFeat(nId, featId)
+
 mySet = set([1, 2, 163, 100, 3586, 3718])
-print nIdsWithFeatId(52)
-print "nId has featId (boolean 0 or 1): %d" % nodeHasFeat(nId, featId)
-print nIdsWithFeatDescript("work")
+
+featId = 52
+descriptKey = globIdToDescriptKey[featId]
+# print descriptKey
+# print nIdsByFeatId[featId]
+# print "nodes based off featId list: "
+# print nIdsByFeatId[featId]
+
+
+byDescript = nIdsWithFeatDescript(descriptKey)
+print len(nIdsWithFeatDescript(descriptKey))
+print len(nIdsWithFeatId(featId))
 print nIdsWithFeatDescript("work", mySet)
