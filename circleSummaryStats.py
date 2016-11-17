@@ -205,14 +205,9 @@ def loadEgoGraph(ego):
 
 
 loadEachEgosCircles() 
-histData = list()
-allCircles = getListOfAll(NODES_SET)
-for nodesSet in allCircles:
-	histData.append(len(nodesSet))
 
-plt.hist(histData)
-plt.xlabel()
-plt.show()
+#DEMO
+
 
 #DEMO OF DATA QUERYING FUNCTIONS:
 
