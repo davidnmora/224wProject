@@ -33,6 +33,8 @@ def loadAllFeat():
 		for nodeFeatStr in featByNode:
 			parseANodesFeat(nodeFeatStr, locToGlobFeatKey)
 	loadNIdsByFeatDescript()
+	print "ALL FEATURES LOADED"
+	print " "
 
 #BUILT FOR RACHEL W/ <3 *****************
 # These functions get a set() of all node Ids which...
@@ -52,8 +54,7 @@ def nIdsWithFeatDescript(featDescript, optSetOfNIds=set()):
 	result = set()
 	#search all description keys of dict, if return the ones containing AT LEAST the input string
 	for featDescriptKey in nIdsByFeatDescript:
-		#check if featDescript matches the featDescript key, in whole or in part
-		
+		#check if featDescript matches the featDescript key, in whole or in part		
 		if featDescript in featDescriptKey:
 			#if there's a specififed set, only add things in the specified set
 			if optSetOfNIds:
@@ -61,21 +62,14 @@ def nIdsWithFeatDescript(featDescript, optSetOfNIds=set()):
 				result = result.union(intersection) 
 
 			#add set of all nodes who have that featDescript
-			else:
-			
-			
+			else:		
 				result = result.union(nIdsByFeatDescript[featDescriptKey])
-
-
 	return result
 
 #"PUBLIC" CLIENT-SIDE FUNCTIONS***********
-#returns a boolean based on whether a node has a given feature (IS THIS USEFUL?)
-def nodeHasFeat(nId, featId):
-	
-	return featId in featByNId[nId]
 #returns a set() of all featIds of a given nId
 def featIdsOfNId(nId):
+	
 	return featByNId[nId]
 
 
@@ -140,32 +134,15 @@ def loadNIdsByFeatDescript():
 			nIdsByFeatDescript[descript] = nIdsByFeatId[featId]
 
 
-
-
-
-
 #PROGRAM_________________________________________________
 loadAllFeat()
 
 
 #DEMO:
-# featId = 144
-# nId = 122
-# print featIdsOfNId(nId)
-# print "Set of Node Ids who have a given featId: "
-# print "nId has featId (boolean 0 or 1): %d" % nodeHasFeat(nId, featId)
-
-mySet = set([1, 2, 163, 100, 3586, 3718])
-
-featId = 52
-descriptKey = globIdToDescriptKey[featId]
-# print descriptKey
-# print nIdsByFeatId[featId]
-# print "nodes based off featId list: "
-# print nIdsByFeatId[featId]
-
-
-byDescript = nIdsWithFeatDescript(descriptKey)
-print len(nIdsWithFeatDescript(descriptKey))
-print len(nIdsWithFeatId(featId))
-print nIdsWithFeatDescript("work", mySet)
+# mySet = set([1, 2, 163, 100, 3586, 3718])
+# featId = 52
+# descriptKey = globIdToDescriptKey[featId]
+# print len(nIdsWithFeatDescript(descriptKey))
+# print len(nIdsWithFeatId(featId))
+# print nIdsWithFeatDescript("work", mySet)
+# print nIdsWithFeatDescript(descriptKey, mySet)

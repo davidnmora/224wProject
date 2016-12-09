@@ -4,9 +4,9 @@ egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 
 networks = [TUNGraph.New() for x in egos]
 overallNet = TUNGraph.New()
-overallNet = LoadEdgeList(PUNGraph, "facebook/total.edges", 0 ,1)
+overallNet = LoadEdgeList(PUNGraph, "fb_data/facebook_combined.txt", 0 ,1)
 for i in range(len(egos)):
-  filename = "facebook/" + str(egos[i])+ ".edges"
+  filename = "fb_data/facebook/" + str(egos[i])+ ".edges"
   networks[i] = LoadEdgeList(PUNGraph, filename, 0, 1)
   if not overallNet.IsNode(egos[i]):
     overallNet.AddNode(egos[i])

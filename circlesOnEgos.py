@@ -1,8 +1,8 @@
 from snap import *
 import numpy
-from circleSummaryStats import loadEachEgosCircles
-from circleSummaryStats import getDataAt
-from loadFeaturesByNId import *
+from circleSummaryStats import getDataAt #NOTE: importing any function runs entire file
+from loadFeaturesByNId import * #NOTE: importing any function runs entire file
+
 
 def analysis(network_array):
   print "number of nodes"
@@ -53,7 +53,6 @@ def analysis(network_array):
   #  print tempDict
 
 
-loadEachEgosCircles()
 egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 '''
 for ego in egos:
@@ -66,8 +65,7 @@ for ego in egos:
   analysis(subgraphs)
 '''
 
-loadAllFeat()
-features = ["work;from", "location", "work;projects", "work;location", "locale", "education;concentration", "work;employer", "religion", "hometown", "education;type", "education;classes", "education;year", "languages", "education;school", "gender", "education;degree"]
+features = ["work;from", "location", "work;projects", "work;location", "locale", "work;employer", "religion", "hometown", "education;concentration", "education;type", "education;classes", "education;year",  "education;school", "education;degree", "languages", "gender"]
 for feat in features:
   print "-----------FEATURE " + feat
   subgraphs = []
@@ -75,7 +73,7 @@ for feat in features:
     circles = getDataAt(ego)
     for i in range(len(circles)):
       setOfNodes = set(getDataAt(ego, i, "NODES_VECTOR"))
-      if len(nIdsWithFeatDescript(feat, setOfNodes)) > len(getDataAt(ego, i, "NODES_VECTOR")) * .8:
+      if len(nIdsWithFeatDescript(feat, setOfNodes)) > len(getDataAt(ego, i, "NODES_VECTOR")) * .6:
         subgraphs.append(getDataAt(ego, i, "SUB_GRAPH"))
   if len(subgraphs) > 0:
     print "number of circles: " + str(len(subgraphs))

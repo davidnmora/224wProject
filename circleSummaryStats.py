@@ -204,7 +204,10 @@ def loadEgoGraph(ego):
 
 
 
-#loadEachEgosCircles() 
+loadEachEgosCircles() 
+
+#DEMO
+
 
 #DEMO OF DATA QUERYING FUNCTIONS:
 
