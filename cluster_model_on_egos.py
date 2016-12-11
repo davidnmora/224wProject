@@ -1,6 +1,8 @@
 from snap import *
 import numpy
 import copy
+import math
+import random
 
 #107, 1912, 1684
 egos = [0, 3437, 348, 3980, 414, 686, 698]
@@ -42,7 +44,6 @@ def formClusters(graph, copy):
     clusterN = 1
     for i in range(1000):
 #    while numComponents < 5:
-        print i
         if numComponents > 9:
             break
 #        if clusterN < .71:
@@ -57,11 +58,32 @@ def formClusters(graph, copy):
             for cnCom in Components:
                 clusterN += communityStrength(copy, cnCom)
             clusterN /= float(numComponents)
-    print "done"
     return graph
 
+def generateNullModel(graph, prob):
+    clusters = []
+    for i in range(10):
+        probability = random.random()
+        logNumNodes = 2.54 - .067584 * (math.log(probability))
+        numNodes = int(math.exp(logNumNodes))
+        numEdges = (graph.GetEdges() /graph.GetNodes()) * 7 * numNodes/float(graph.GetNodes())
+        print numEdges
+        clusters.append(GenSmallWorld(numNodes, int(numEdges), prob))
+    compiled_graph = TUNGraph.New()
+    for i in range(len(clusters)):
+        graph = clusters[i]
+        for node in graph.Nodes():
+            nodeId = node.GetId() + i * 100
+            compiled_graph.AddNode(nodeId)
+        for edge in graph.Edges():
+            src = edge.GetSrcNId() + i * 100
+            dst = edge.GetDstNId() + i * 100
+            compiled_graph.AddEdge(src, dst)
+    rewire(compiled_graph, int(.4 * compiled_graph.GetEdges()))
+    return compiled_graph
+
 def loadNetworks():
-    egonets = [[] for x in range(7)]
+    egonets = [[] for x in range(8)]
     for i in range(len(egos)):
         filename = "fb_data/facebook/" + str(egos[i])+ ".edges"
         egoI = TUNGraph.New()
@@ -77,7 +99,8 @@ def loadNetworks():
 #        egonets[3].append(GenPrefAttach(egoI.GetNodes(), degree))
 #        egonets[4].append(GenRewire(egoI, 100))
 #        egonets[5].append(GenRndGnm(PUNGraph, egoI.GetNodes(), egoI.GetEdges()*2, False))
-        egonets[6].append(GenSmallWorld(egoI.GetNodes(), egoI.GetNodes()/5, .3))
+#        egonets[6].append(GenSmallWorld(egoI.GetNodes(), egoI.GetEdges()/egoI.GetNodes(), .4))
+        egonets[7].append(generateNullModel(egoI, .4))
     print "finished generating"
     return egonets
     
@@ -99,6 +122,28 @@ def createEgos(all_networks):
                 egonets[k].append(ConvertSubGraph(PUNGraph, net, neighbors))
     print "created egos"
     return egonets
+
+def rewire(graph, iters):        
+    for i in range(iters):
+        while(True):
+            node1 = graph.GetRndNId()
+            deg = graph.GetNI(node1).GetDeg()
+            if deg == 0:
+                continue
+            neighbor1 = random.randint(0, deg-1)
+            dest1 = graph.GetNI(node1).GetNbrNId(neighbor1)
+            node2 = graph.GetRndNId()
+            deg = graph.GetNI(node2).GetOutDeg()
+            if deg == 0:
+                continue
+            neighbor2 = random.randint(0, deg-1)
+            dest2 = graph.GetNI(node2).GetNbrNId(neighbor2)
+            if not graph.IsEdge(node1, dest2) and not graph.IsEdge(node2, dest1) and node1 != dest2 and node2 != dest1:
+                break
+        graph.DelEdge(node1, dest1)
+        graph.DelEdge(node2, dest2)
+        graph.AddEdge(node1, dest2)
+        graph.AddEdge(node2, dest1)
 
 def createSubGraph(graph, nodes):
     temp = TUNGraph.New()
@@ -154,15 +199,7 @@ for j in egos:
                     maxi = degCentr
             closeness.append(maxi)
             community.append(communityStrength(copyi, cnCom))
-    print "number of circles", numClusters
-    print "number of elements: ", numElements
-    print "Number of edges", numEdges
-    print "clustering Coefficient: ", clusteringCoefficient
-    print "betweenness Coefficient: ", betweenness
-    print "centrality Coefficient: ", centrality
-    print "closeness Coefficient: ", closeness
-    print "community strenght: ", community
-    print " "
+
     print "number of circles", numpy.std(numClusters), numpy.mean(numClusters)
     print "number of elements: ", numpy.std(numElements), numpy.mean(numElements)
     print "Number of edges", numpy.std(numEdges), numpy.mean(numEdges)
