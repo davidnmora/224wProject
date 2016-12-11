@@ -13,7 +13,6 @@ def purgeSelfEdges(rewireList):
       n1 = rewireList[i*2]
       n2 = rewireList[(i*2)+1]
       if n1 == n2:
-        print i
         hasSelfEdge = True
         #swap with element ahead of it
         n3 = rewireList[(i*2)+2]

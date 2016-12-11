@@ -1,3 +1,7 @@
+# Loads various null model networks, and based fb_data,
+# sorts them into clusters.
+
+
 from snap import *
 import numpy
 import copy

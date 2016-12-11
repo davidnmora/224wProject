@@ -185,7 +185,12 @@ def loadACirclesIds(circle, circles):
 	circleNIds = circles[circle].split('\t') 
 	circleNIds[len(circleNIds)-1] = circleNIds[len(circleNIds)-1].rstrip('\n')
 	circleId = circleNIds[0]
-	circleId = int(circleId[len(circleId)-1])
+	# circleId = int(circleId[len(circleId)-1])
+	circleId = circleId[-2:] #grab "14" or "e9"
+	if circleId[0] == 'e': 
+		circleId = circleId[-1:] #change to "9" by removing "e"
+	circleId = int(circleId)
+
 	del circleNIds[0]
 	NIdV = TIntV()
 	NIdSet = set()
