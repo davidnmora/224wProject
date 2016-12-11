@@ -2,7 +2,8 @@ from snap import *
 import numpy
 import copy
 
-egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
+#107, 1912, 1684
+egos = [0, 3437, 348, 3980, 414, 686, 698]
 
 def communityStrength(graph, vec):
     nodes = [x for x in vec]
@@ -39,12 +40,13 @@ def formClusters(graph, copy):
     numComponents = 1
     cluster = -1
     clusterN = 1
-    for i in range(10000):
+    for i in range(1000):
 #    while numComponents < 5:
-#        if numComponents > 7:
-#            break
-        if clusterN < .71:
+        print i
+        if numComponents > 9:
             break
+#        if clusterN < .71:
+#            break
         cluster = clusterN
         removeEdge(graph)
         Components = TCnComV()
@@ -55,37 +57,29 @@ def formClusters(graph, copy):
             for cnCom in Components:
                 clusterN += communityStrength(copy, cnCom)
             clusterN /= float(numComponents)
+    print "done"
     return graph
 
 def loadNetworks():
-    bigNetworks = []
-    overallNet = TUNGraph.New()
+    egonets = [[] for x in range(7)]
     for i in range(len(egos)):
         filename = "fb_data/facebook/" + str(egos[i])+ ".edges"
         egoI = TUNGraph.New()
         egoI = LoadEdgeList(PUNGraph, filename, 0, 1)
-        if not overallNet.IsNode(egos[i]):
-            overallNet.AddNode(egos[i])
-        for node in egoI.Nodes():
-            if not overallNet.IsNode(node.GetId()):
-                overallNet.AddNode(node.GetId())
-            overallNet.AddEdge(egos[i], node.GetId())
-        for edge in egoI.Edges():
-            overallNet.AddEdge(edge.GetSrcNId(), edge.GetDstNId())
-    bigNetworks.append(overallNet)
-#    bigNetworks.append(GenConfModel(overallNet))
-#    in_degree = TIntV()
-#    out_degree = TIntV()
-#    GetDegSeqV(overallNet, in_degree, out_degree)
-#    in_degree.Sort(False) 
-#    bigNetworks.append(GenDegSeq(in_degree))
-#    degree = overallNet.GetEdges() *2 / overallNet.GetNodes()
-#    bigNetworks.append(GenPrefAttach(overallNet.GetNodes(), degree))
-#    bigNetworks.append(GenRewire(overallNet, 100))
-#    bigNetworks.append(GenRndGnm(PUNGraph, overallNet.GetNodes(), overallNet.GetEdges()*2, False))
-#    bigNetworks.append(GenSmallWorld(overallNet.GetNodes(), 150, .3))
+#        egonets[0].append(egoI)
+#        egonets[1].append(GenConfModel(egoI))
+        in_degree = TIntV()
+        out_degree = TIntV()
+        GetDegSeqV(egoI, in_degree, out_degree)
+        in_degree.Sort(False) 
+#        egonets[2].append(GenDegSeq(in_degree))
+        degree = egoI.GetEdges() / egoI.GetNodes()
+#        egonets[3].append(GenPrefAttach(egoI.GetNodes(), degree))
+#        egonets[4].append(GenRewire(egoI, 100))
+#        egonets[5].append(GenRndGnm(PUNGraph, egoI.GetNodes(), egoI.GetEdges()*2, False))
+        egonets[6].append(GenSmallWorld(egoI.GetNodes(), egoI.GetNodes()/5, .3))
     print "finished generating"
-    return bigNetworks
+    return egonets
     
 def createEgos(all_networks):
     egonets = [[] for x in range(len(all_networks))]
@@ -116,8 +110,9 @@ def createSubGraph(graph, nodes):
                 temp.AddEdge(nodes[i],nodes[j])
     return temp
 
-networks = loadNetworks()
-egos = createEgos(networks)
+#networks = loadNetworks()
+#egos = createEgos(networks)
+egos = loadNetworks()
 for j in egos:
     numElements = []
     numEdges = []
@@ -159,6 +154,15 @@ for j in egos:
                     maxi = degCentr
             closeness.append(maxi)
             community.append(communityStrength(copyi, cnCom))
+    print "number of circles", numClusters
+    print "number of elements: ", numElements
+    print "Number of edges", numEdges
+    print "clustering Coefficient: ", clusteringCoefficient
+    print "betweenness Coefficient: ", betweenness
+    print "centrality Coefficient: ", centrality
+    print "closeness Coefficient: ", closeness
+    print "community strenght: ", community
+    print " "
     print "number of circles", numpy.std(numClusters), numpy.mean(numClusters)
     print "number of elements: ", numpy.std(numElements), numpy.mean(numElements)
     print "Number of edges", numpy.std(numEdges), numpy.mean(numEdges)
@@ -167,6 +171,7 @@ for j in egos:
     print "centrality Coefficient: ", numpy.std(centrality), numpy.mean(centrality)
     print "closeness Coefficient: ", numpy.std(closeness), numpy.mean(closeness)
     print "community strenght: ", numpy.std(community), numpy.mean(community)
+    print " "
     print " "
 #    print "number of Nodes: ", numElements, "number of edges: ", numEdges, "Clustering Coefficient: ", clusteringCoefficient
 

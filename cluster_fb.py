@@ -2,7 +2,7 @@ from snap import *
 import numpy
 import copy
 
-egos = [0, 107, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
+egos = [0, 1684, 1912, 3437, 348, 3980, 414, 686, 698]
 
 def communityStrength(graph, vec):
     nodes = [x for x in vec]
@@ -35,16 +35,19 @@ def removeEdge(graph):
     if graph.IsNode(src) and graph.IsNode(dest):
         graph.DelEdge(src, dest)
 
-def formClusters(graph, copy):
+def formClusters(graph):
+    print "num nodes ", graph.GetNodes()
     numComponents = 1
     cluster = -1
-    clusterN = 1
-    for i in range(10000):
-#    while numComponents < 5:
+    clusterN = -1
+#    for i in range(50):
+    i = 0
+    while numComponents < 9:
 #        if numComponents > 7:
 #            break
-        if clusterN < .71:
-            break
+#        if cluster < clusterN or numComponents > 8:
+#            print i
+#            break
         cluster = clusterN
         removeEdge(graph)
         Components = TCnComV()
@@ -53,8 +56,9 @@ def formClusters(graph, copy):
         if i % 15 == 0:
             clusterN = 0
             for cnCom in Components:
-                clusterN += communityStrength(copy, cnCom)
-            clusterN /= float(numComponents)
+                clusterN += communityStrength(graph, cnCom)
+	print i, numComponents
+        i += 1
     return graph
 
 def loadNetworks():
@@ -73,17 +77,6 @@ def loadNetworks():
         for edge in egoI.Edges():
             overallNet.AddEdge(edge.GetSrcNId(), edge.GetDstNId())
     bigNetworks.append(overallNet)
-#    bigNetworks.append(GenConfModel(overallNet))
-#    in_degree = TIntV()
-#    out_degree = TIntV()
-#    GetDegSeqV(overallNet, in_degree, out_degree)
-#    in_degree.Sort(False) 
-#    bigNetworks.append(GenDegSeq(in_degree))
-#    degree = overallNet.GetEdges() *2 / overallNet.GetNodes()
-#    bigNetworks.append(GenPrefAttach(overallNet.GetNodes(), degree))
-#    bigNetworks.append(GenRewire(overallNet, 100))
-#    bigNetworks.append(GenRndGnm(PUNGraph, overallNet.GetNodes(), overallNet.GetEdges()*2, False))
-#    bigNetworks.append(GenSmallWorld(overallNet.GetNodes(), 150, .3))
     print "finished generating"
     return bigNetworks
     
@@ -91,18 +84,13 @@ def createEgos(all_networks):
     egonets = [[] for x in range(len(all_networks))]
     for k in range(len(all_networks)):
         net = all_networks[k]
-        cache = set()
-        i = 0
-        while len(egonets[k]) < 20 and i < 100:
-            i += 1
-            num = net.GetRndNId()
-            node = net.GetNI(num)
+        for i in egos:
+            node = net.GetNI(i)
             neighbors = TIntV()
-            if node.GetOutDeg() > 100 and num not in cache:
-                cache.add(num)
-                for i in range(node.GetOutDeg()):
-                    neighbors.Add(node.GetNbrNId(i))
-                egonets[k].append(ConvertSubGraph(PUNGraph, net, neighbors))
+            for i in range(node.GetOutDeg()):
+              neighbors.Add(node.GetNbrNId(i))
+            egonets[k].append(ConvertSubGraph(PUNGraph, net, neighbors))
+            print len(neighbors)
     print "created egos"
     return egonets
 
@@ -129,7 +117,7 @@ for j in egos:
     community = []
     for i in j:
         copyi = ConvertGraph(PUNGraph, i)
-        formClusters(i, copyi)
+        formClusters(i)
         Components = TCnComV()
         GetSccs(i, Components)
         numClusters.append(len(Components))
